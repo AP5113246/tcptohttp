@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -13,27 +14,38 @@ func main() {
 
 	file, err := os.Open(inputFilePath)
 	if err != nil {
-		log.Fatal("oopsies in opening the file: ",err)
-		return 
+		log.Fatal("oopsies in opening the file: ", err)
+		return
 	}
 	defer file.Close()
 
-	buffer := make([]byte, 8, 8)
-	var currentLine string
+	str := ""
 
 	for {
-		number_of_bytes, err := file.Read(buffer)
+		file_data := make([]byte, 8, 8)
+
+		_, err := file.Read(file_data)
 		if err != nil {
 			if err == io.EOF {
 				break
 			} else {
 				log.Fatal("issue reading bytes from file!")
 			}
-			
+
 		}
-		fmt.Printf("read: %s\n", buffer)
-		currentRead := string(buffer[:number_of_bytes])
-		currentLine += currentRead 
+
+		// file_data = file_data[:number_of_bytes]
+		if i := bytes.IndexByte(file_data, '\n'); i != -1 {
+			str += string(file_data[:i])
+			file_data = file_data[i+1:]
+			fmt.Printf("read: %s\n", str)
+			str = ""
+		}
+		str += string(file_data)
 	}
-	
+
+	if len(str) != 0 {
+		fmt.Printf("read: %s\n", str)
+	}
+
 }
