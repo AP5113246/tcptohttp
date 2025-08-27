@@ -10,6 +10,13 @@ import (
 
 const inputFilePath = "messages.txt"
 
+
+func getLinesCahnnel(f io.ReadCloser) <- chan string {
+	
+}
+
+
+
 func main() {
 
 	file, err := os.Open(inputFilePath)
