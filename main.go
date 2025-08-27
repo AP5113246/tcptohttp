@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -30,6 +31,7 @@ func main() {
 			}
 			
 		}
+		fmt.Printf("read: %s\n", buffer)
 		currentRead := string(buffer[:number_of_bytes])
 		currentLine += currentRead 
 	}
