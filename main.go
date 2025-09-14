@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -10,49 +10,30 @@ import (
 
 const inputFilePath = "messages.txt"
 
-
-func getLinesCahnnel(f io.ReadCloser) <- chan string {
-	
-}
-
-
-
 func main() {
+	// open file and defer close
 
-	file, err := os.Open(inputFilePath)
+	f, err := os.Open(inputFilePath)
 	if err != nil {
-		log.Fatal("oopsies in opening the file: ", err)
-		return
-	}
-	defer file.Close()
+		log.Fatalf("Could not open file titled : %s . Error : %s", inputFilePath, err)
 
-	str := ""
+	}
+	defer f.Close()
+
+	fmt.Printf("Reading data from %s\n", inputFilePath)
+	fmt.Println("=====================================")
 
 	for {
-		file_data := make([]byte, 8, 8)
-
-		_, err := file.Read(file_data)
+		b := make([]byte,8,8)
+		n, err := f.Read(b)
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF){
 				break
-			} else {
-				log.Fatal("issue reading bytes from file!")
 			}
-
+			fmt.Printf("error: %s\n",err.Error())
+			break
 		}
-
-		// file_data = file_data[:number_of_bytes]
-		if i := bytes.IndexByte(file_data, '\n'); i != -1 {
-			str += string(file_data[:i])
-			file_data = file_data[i+1:]
-			fmt.Printf("read: %s\n", str)
-			str = ""
-		}
-		str += string(file_data)
+		str := string(b[0:n])
+		fmt.Printf("read: %v\n",str)
 	}
-
-	if len(str) != 0 {
-		fmt.Printf("read: %s\n", str)
-	}
-
 }
