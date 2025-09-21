@@ -11,6 +11,42 @@ import (
 
 const inputFilePath = "messages.txt"
 
+func getLinesChannel(f io.ReadCloser) <-chan string {
+	lines := make(chan string)
+
+	go func(){
+		newLineContent := ""
+		for {
+			buffer := make([]byte, 8,8)
+			number_bytes_read, err := f.Read(buffer)
+			if err != nil {
+				if newLineContent != "" {
+					lines <- newLineContent
+					newLineContent = ""
+				}
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				fmt.Println("Error in opening file", err)
+				break
+			}
+
+			str := string(buffer[0:number_bytes_read])
+			parts := strings.Split(str, "\n")
+
+			for i := 0; i < len(parts) - 1; i++ {
+				lines <- (newLineContent + parts[i])
+				newLineContent = ""
+			}
+			newLineContent += parts[len(parts) - 1]			
+		}
+		close(lines) // what does close () do?
+	}()
+
+	
+	return lines 
+}
+
 func main() {
 	f, err := os.Open(inputFilePath)
 	if err != nil {
@@ -19,32 +55,12 @@ func main() {
 	}
 	defer f.Close()
 
-	fmt.Printf("Reading data from %s\n", inputFilePath)
+	fmt.Printf("Reading data from %s\n", inputFilePath)    
 	fmt.Println("=====================================")
-	newLineContent := ""
+	
+	linesFromChannel := getLinesChannel(f)
 
-	for {
-		buffer := make([]byte,8,8)
-		n, err := f.Read(buffer)
-		if err != nil {
-			if newLineContent != "" {
-				fmt.Printf("read: %s",newLineContent)
-				newLineContent = ""
-			}
-			if errors.Is(err, io.EOF){
-				break
-			}
-			fmt.Printf("error: %s\n",err.Error())
-			break
-		}
-
-		str := string(buffer[0:n])
-		parts := strings.Split(str,"\n")
-
-		for i := 0; i < len(parts) - 1; i++ {
-			fmt.Printf("read: %s%s\n", newLineContent,parts[i])
-			newLineContent = ""
-		}
-		newLineContent += parts[len(parts) - 1]
+	for line := range linesFromChannel {
+		fmt.Printf("read: %s\n",line)
 	}
 }
