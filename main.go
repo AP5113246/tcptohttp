@@ -4,59 +4,56 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strings"
 )
 
-const inputFilePath = "messages.txt"
 
-func getLinesChannel(f io.ReadCloser) <-chan string {
-	lines := make(chan string, 1)
+func getLinesChannel(files io.ReadCloser) <- chan string {
 
-	go func(){
-		defer f.Close()
-		defer close(lines)
-		newLineContent := ""
-		for {
-			buffer := make([]byte, 8,8)
-			number_bytes_read, err := f.Read(buffer)
-			if err != nil {
-				if newLineContent != "" {
-					lines <- newLineContent
-				}
-				if errors.Is(err, io.EOF) {
-					break
-				}
-				fmt.Println("Error in opening file", err)
-				break
-			}
-
-			str := string(buffer[0:number_bytes_read])
-			parts := strings.Split(str, "\n")
-
-			for i := 0; i < len(parts) - 1; i++ {
-				lines <- (newLineContent + parts[i])
-				newLineContent = ""
-			}
-			newLineContent += parts[len(parts) - 1]			
-		}
+	outputChannel := make(chan string)
+	go func () {
+		bytes_extracted := make([]byte, 8, 8)
+		num_bytes_read, err := files.Read(bytes_extracted)
+	
 	}()
-	return lines 
+
+	return outputChannel
 }
 
 func main() {
-	f, err := os.Open(inputFilePath)
+
+	filepointer, err := os.Open("messages.txt")
 	if err != nil {
-		log.Fatalf("Could not open file titled : %s . Error : %s", inputFilePath, err)
-
+		fmt.Printf("Unable to open file error: %v", err)
+		return 
 	}
-
-	fmt.Printf("Reading data from %s\n", inputFilePath)    
 	
-	linesFromChannel := getLinesChannel(f)
-
-	for line := range linesFromChannel {
-		fmt.Printf("read: %s\n",line)
+	defer filepointer.Close()
+	newLineContent := ""
+	
+	for {
+		bytes_read := make([]byte,8,8)
+		number_of_bytes_read, err := filepointer.Read(bytes_read)
+		
+		if err != nil {
+			if newLineContent != "" {
+				fmt.Printf("read: %s\n",newLineContent)
+			}
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			fmt.Printf("Unable to open file error: %w", err)
+			return
+		}
+		
+		outputString := string(bytes_read[0:number_of_bytes_read])
+		parts := strings.Split(outputString,"\n")
+		for i := 0; i < len(parts) - 1; i++ {
+			newLineContent += parts[i]
+			fmt.Printf("read: %s\n",newLineContent)
+			newLineContent = ""
+		}
+		newLineContent += parts[len(parts) - 1]
 	}
 }
