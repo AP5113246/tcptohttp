@@ -21,23 +21,25 @@ func main() {
 	var currentLine string
 
 	for {
-	
-		byteCount, err := filePointer.Read(linesSlice)
-		if err == io.EOF {
-			if currentLine != "" {
-				fmt.Printf("read: %s\n", currentLine)
-			}
+		byteCount , err := filePointer.Read(linesSlice)
+		if err != nil {
+			if err == io.EOF || currentLine != "" {
+				fmt.Printf("read: %s\n",currentLine)
+			} else if err != io.EOF {
+				fmt.Println("issue with reading line:", err)
+			} 
 			return 
 		}
-		
+
 		parts := strings.Split(string(linesSlice[:byteCount]), "\n")
-		for _, parts := range parts[:len(parts) - 1] {
-			
-			currentLine += parts
+
+		for  _, line := range parts[:len(parts) - 1] {
+			currentLine += line
 			fmt.Printf("read: %s\n",currentLine)
 			currentLine = ""
 		}
-		currentLine += parts[len(parts) - 1]
+
+		currentLine += parts[len(parts)-1]
 
 	}
 }
